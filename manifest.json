@@ -1,0 +1,21 @@
+{
+    "name": "TECH PAIN",
+    "short_name": "TechPain",
+    "description": "Aplicativo para controle de dispositivos de estimulação",
+    "start_url": "index.html",
+    "display": "standalone",
+    "background_color": "#5a636e",
+    "theme_color": "#00b4d8",
+    "icons": [
+        {
+            "src": "icon.png",
+            "sizes": "192x192",
+            "type": "image/png"
+        },
+        {
+            "src": "icon.png",
+            "sizes": "512x512",
+            "type": "image/png"
+        }
+    ]
+}

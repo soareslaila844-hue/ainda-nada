@@ -1,0 +1,2094 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>TECH PAIN</title>
+
+    <!-- Adicionar cordova.js para app mobile -->
+    <script src="cordova.js"></script>
+
+    <!-- Importar fontes do Google -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800&family=Roboto+Mono:wght@300;400;500;600;700&display=swap"
+        rel="stylesheet">
+
+    <style>
+        /* FONTES PERSONALIZADAS */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            -webkit-tap-highlight-color: transparent;
+            font-family: 'Montserrat', sans-serif;
+        }
+
+        html,
+        body {
+            height: 100%;
+            width: 100%;
+            overflow-x: hidden;
+        }
+
+        body {
+            font-family: 'Montserrat', sans-serif;
+            background: linear-gradient(135deg, #5a636e 0%, #5a636e 100%);
+            color: #ffffff;
+            min-height: 100vh;
+            padding: 20px;
+            overflow-y: auto;
+            -webkit-overflow-scrolling: touch;
+            position: relative;
+        }
+
+        /* Fontes específicas */
+        .setting-value,
+        .countdown-display,
+        .current-value,
+        .time-value,
+        .intensity-value {
+            font-family: 'Roboto Mono', monospace !important;
+        }
+
+        /* Container principal */
+        .app-container {
+            max-width: 500px;
+            margin: 0 auto;
+            min-height: 100%;
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* Header com Logo REAL */
+        .app-header {
+            text-align: center;
+            margin-bottom: 20px;
+            flex-shrink: 0;
+            padding-top: 10px;
+        }
+
+        .logo-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .tech-pain-logo {
+            width: 120%;
+            max-width: 300px;
+            height: 120px;
+            aspect-ratio: 640/75;
+            background-image: url('https://web.techpain.com.br/_next/image?url=%2F_next%2Fstatic%2Fmedia%2Flogo.9ae4d9af.png&w=640&q=75');
+            background-size: contain;
+            background-repeat: no-repeat;
+            background-position: center;
+            margin: 0 auto;
+        }
+
+        /* Status de Conexão Bluetooth */
+        .bluetooth-status {
+            margin-bottom: 15px;
+            padding: 12px 16px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            font-family: 'Montserrat', sans-serif;
+            font-size: 14px;
+            font-weight: 500;
+            transition: all 0.3s ease;
+        }
+
+        .bluetooth-status.connected {
+            background: rgba(46, 213, 115, 0.15);
+            border: 1px solid rgba(46, 213, 115, 0.3);
+            color: #2ed573;
+        }
+
+        .bluetooth-status.disconnected {
+            background: rgba(255, 71, 87, 0.15);
+            border: 1px solid rgba(255, 71, 87, 0.3);
+            color: #ff4757;
+        }
+
+        .bluetooth-status.connecting {
+            background: rgba(0, 180, 216, 0.15);
+            border: 1px solid rgba(0, 180, 216, 0.3);
+            color: #00b4d8;
+        }
+
+        .status-icon {
+            font-size: 18px;
+            margin-right: 10px;
+        }
+
+        @keyframes blink {
+
+            0%,
+            100% {
+                opacity: 1;
+            }
+
+            50% {
+                opacity: 0.5;
+            }
+        }
+
+        .bluetooth-status.connecting .status-icon {
+            animation: blink 1.5s infinite;
+        }
+
+        .status-text {
+            flex: 1;
+        }
+
+        .device-name {
+            font-weight: 600;
+            margin-left: 5px;
+        }
+
+        .status-action {
+            font-size: 12px;
+            opacity: 0.8;
+            cursor: pointer;
+            text-decoration: underline;
+            background: none;
+            border: none;
+            color: inherit;
+            font-family: inherit;
+        }
+
+        .status-action:hover {
+            opacity: 1;
+        }
+
+        /* Botão de Conectar Bluetooth */
+        .bluetooth-section {
+            margin-bottom: 25px;
+        }
+
+        .connect-btn {
+            width: 100%;
+            padding: 16px;
+            border: none;
+            border-radius: 16px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            flex-shrink: 0;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            font-family: 'Montserrat', sans-serif;
+            background: linear-gradient(135deg, #00b4d8 0%, #0090b0 100%);
+            color: white;
+            box-shadow: 0 4px 12px rgba(0, 180, 216, 0.3);
+        }
+
+        .connect-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(0, 180, 216, 0.4);
+        }
+
+        .connect-btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        /* STATUS DA APLICAÇÃO - SÓ APARECE DURANTE APLICAÇÃO */
+        .application-status {
+            margin-bottom: 25px;
+            padding: 16px;
+            background: linear-gradient(135deg, rgba(46, 213, 115, 0.2) 0%, rgba(30, 144, 255, 0.2) 100%);
+            border-radius: 16px;
+            border: 2px solid rgba(46, 213, 115, 0.3);
+            display: none;
+            animation: fadeIn 0.5s ease;
+        }
+
+        .application-status.active {
+            display: block;
+        }
+
+        .status-header {
+            display: flex;
+            align-items: center;
+            margin-bottom: 12px;
+            gap: 10px;
+        }
+
+        .status-icon-app {
+            font-size: 20px;
+            animation: pulse 2s infinite;
+        }
+
+        .status-title {
+            font-size: 16px;
+            font-weight: 700;
+            color: #2ed573;
+            font-family: 'Montserrat', sans-serif;
+        }
+
+        .status-content {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .status-message {
+            font-size: 14px;
+            color: #bdc3c7;
+            font-family: 'Montserrat', sans-serif;
+        }
+
+        .status-time {
+            font-size: 24px;
+            font-weight: 700;
+            color: #00b4d8;
+            font-family: 'Roboto Mono', monospace;
+            text-align: center;
+            margin: 5px 0;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(-10px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        /* Configurações em um único bloco */
+        .settings-container {
+            margin-bottom: 25px;
+            flex: 1;
+            overflow-y: auto;
+            -webkit-overflow-scrolling: touch;
+            min-height: 0;
+        }
+
+        .settings-title {
+            font-size: 16px;
+            font-weight: 600;
+            color: #ffffff;
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-family: 'Montserrat', sans-serif;
+        }
+
+        .configurations-block {
+            background: linear-gradient(135deg, rgba(40, 40, 40, 0.9) 0%, rgba(30, 30, 30, 0.9) 100%);
+            border-radius: 16px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            transition: all 0.3s ease;
+            padding: 20px;
+        }
+
+        .configurations-block.disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+
+        .configurations-header {
+            display: flex;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .configurations-icon {
+            font-size: 22px;
+            margin-right: 12px;
+            width: 24px;
+            text-align: center;
+            color: #00b4d8;
+        }
+
+        .configurations-title {
+            font-size: 16px;
+            font-weight: 600;
+            color: #ffffff;
+            flex: 1;
+            font-family: 'Montserrat', sans-serif;
+        }
+
+        /* Configurações lado a lado - TRÊS ITENS */
+        .config-row {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 0;
+        }
+
+        .config-item {
+            flex: 1;
+            background: rgba(0, 0, 0, 0.25);
+            border-radius: 12px;
+            padding: 15px;
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            position: relative;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin: 0 5px;
+        }
+
+        .config-item:first-child {
+            margin-left: 0;
+        }
+
+        .config-item:last-child {
+            margin-right: 0;
+        }
+
+        .config-item:hover {
+            background: rgba(0, 0, 0, 0.35);
+            border-color: rgba(255, 255, 255, 0.1);
+        }
+
+        .config-item.disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+
+        .config-item.disabled:hover {
+            background: rgba(0, 0, 0, 0.25);
+            border-color: rgba(255, 255, 255, 0.05);
+            transform: none;
+        }
+
+        .config-header {
+            display: flex;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+
+        .config-icon {
+            font-size: 18px;
+            margin-right: 8px;
+            width: 20px;
+            text-align: center;
+            color: #00b4d8;
+        }
+
+        .config-label {
+            font-size: 14px;
+            color: #bdc3c7;
+            font-family: 'Montserrat', sans-serif;
+        }
+
+        .config-value {
+            font-size: 28px;
+            font-weight: bold;
+            color: #ffffff;
+            text-align: center;
+            margin: 10px 0;
+            font-family: 'Roboto Mono', monospace;
+            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+        }
+
+        .config-subtitle {
+            font-size: 12px;
+            color: #7f8c8d;
+            text-align: center;
+            font-family: 'Montserrat', sans-serif;
+            margin-top: 5px;
+        }
+
+        /* Main Action Buttons - APENAS INICIAR APLICAÇÃO */
+        .main-actions {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            margin-top: auto;
+            flex-shrink: 0;
+            padding-bottom: 10px;
+        }
+
+        .main-action-btn {
+            width: 100%;
+            padding: 18px;
+            border: none;
+            border-radius: 16px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            flex-shrink: 0;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            font-family: 'Montserrat', sans-serif;
+        }
+
+        .btn-success {
+            background: linear-gradient(135deg, #2ed573 0%, #1e90ff 100%);
+            color: white;
+            box-shadow: 0 4px 12px rgba(46, 213, 115, 0.3);
+        }
+
+        .btn-success:hover:not(:disabled) {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(46, 213, 115, 0.4);
+        }
+
+        .btn-success:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+
+        /* MODAIS - Configurações */
+        .modal-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.85);
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+            padding: 15px;
+            overflow-y: auto;
+            -webkit-overflow-scrolling: touch;
+            backdrop-filter: blur(5px);
+        }
+
+        .modal-container {
+            background: linear-gradient(135deg, #2d2d2d 0%, #1a1a1a 100%);
+            border-radius: 20px;
+            padding: 20px;
+            max-width: 400px;
+            width: 100%;
+            max-height: 85vh;
+            overflow-y: auto;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.5);
+            -webkit-overflow-scrolling: touch;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .modal-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .modal-title {
+            font-size: 18px;
+            font-weight: 600;
+            color: #ffffff;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-family: 'Montserrat', sans-serif;
+        }
+
+        .close-btn {
+            background: rgba(255, 255, 255, 0.1);
+            border: none;
+            font-size: 24px;
+            color: #bdc3c7;
+            cursor: pointer;
+            padding: 5px;
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s ease;
+            flex-shrink: 0;
+            font-family: 'Montserrat', sans-serif;
+        }
+
+        .close-btn:hover {
+            background: rgba(255, 255, 255, 0.2);
+        }
+
+        /* Configuração de Tempo */
+        .time-options-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 12px;
+            max-height: 400px;
+            overflow-y: auto;
+            padding: 10px;
+            margin: 15px 0;
+        }
+
+        .time-option {
+            display: block;
+            padding: 16px 12px;
+            border: 2px solid rgba(255, 255, 255, 0.1);
+            border-radius: 12px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            background: rgba(255, 255, 255, 0.05);
+        }
+
+        .time-option:hover {
+            background: rgba(255, 255, 255, 0.1);
+            transform: translateY(-2px);
+        }
+
+        .time-option.selected {
+            background: linear-gradient(135deg, #00b4d8 0%, #0090b0 100%);
+            border-color: #00b4d8;
+            box-shadow: 0 4px 12px rgba(0, 180, 216, 0.4);
+            color: white;
+        }
+
+        .time-option-value {
+            font-size: 18px;
+            font-weight: bold;
+            color: #ffffff;
+            margin-bottom: 4px;
+            font-family: 'Roboto Mono', monospace;
+        }
+
+        .time-option-description {
+            font-size: 11px;
+            color: rgba(255, 255, 255, 0.8);
+            font-family: 'Montserrat', sans-serif;
+        }
+
+        /* Configuração de Corrente */
+        .current-options-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 12px;
+            max-height: 300px;
+            overflow-y: auto;
+            padding: 10px;
+            margin: 15px 0;
+        }
+
+        .current-option {
+            display: block;
+            padding: 20px 12px;
+            border: 2px solid rgba(255, 255, 255, 0.1);
+            border-radius: 12px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            background: rgba(255, 255, 255, 0.05);
+        }
+
+        .current-option:hover {
+            background: rgba(255, 255, 255, 0.1);
+            transform: translateY(-2px);
+        }
+
+        .current-option.selected {
+            background: linear-gradient(135deg, #00b4d8 0%, #0090b0 100%);
+            border-color: #00b4d8;
+            box-shadow: 0 4px 12px rgba(0, 180, 216, 0.4);
+            color: white;
+        }
+
+        .current-option-value {
+            font-size: 20px;
+            font-weight: bold;
+            color: #ffffff;
+            margin-bottom: 4px;
+            font-family: 'Roboto Mono', monospace;
+        }
+
+        .current-option-unit {
+            font-size: 12px;
+            color: rgba(255, 255, 255, 0.8);
+            font-family: 'Montserrat', sans-serif;
+        }
+
+        /* Configuração de Intensidade (0-10) */
+        .intensity-options-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 12px;
+            max-height: 400px;
+            overflow-y: auto;
+            padding: 10px;
+            margin: 15px 0;
+        }
+
+        .intensity-option {
+            display: block;
+            padding: 20px 12px;
+            border: 2px solid rgba(255, 255, 255, 0.1);
+            border-radius: 12px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            background: rgba(255, 255, 255, 0.05);
+        }
+
+        .intensity-option:hover {
+            background: rgba(255, 255, 255, 0.1);
+            transform: translateY(-2px);
+        }
+
+        .intensity-option.selected {
+            background: linear-gradient(135deg, #9b59b6 0%, #8e44ad 100%);
+            border-color: #9b59b6;
+            box-shadow: 0 4px 12px rgba(155, 89, 182, 0.4);
+            color: white;
+        }
+
+        .intensity-option-value {
+            font-size: 24px;
+            font-weight: bold;
+            color: #ffffff;
+            margin-bottom: 4px;
+            font-family: 'Roboto Mono', monospace;
+        }
+
+        .intensity-option-label {
+            font-size: 12px;
+            color: rgba(255, 255, 255, 0.8);
+            font-family: 'Montserrat', sans-serif;
+        }
+
+        /* Informação do PWM calculado */
+        .pwm-info {
+            text-align: center;
+            margin-top: 15px;
+            padding: 12px;
+            background: rgba(0, 180, 216, 0.1);
+            border-radius: 10px;
+            border: 1px solid rgba(0, 180, 216, 0.3);
+        }
+
+        .pwm-info-text {
+            font-size: 14px;
+            color: #00b4d8;
+            font-family: 'Roboto Mono', monospace;
+            font-weight: 600;
+        }
+
+        /* Modal Actions */
+        .modal-actions {
+            display: flex;
+            gap: 10px;
+            margin-top: 20px;
+        }
+
+        .modal-btn {
+            flex: 1;
+            padding: 14px;
+            border: none;
+            border-radius: 12px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-size: 14px;
+            font-family: 'Montserrat', sans-serif;
+        }
+
+        .modal-btn-save {
+            background: linear-gradient(135deg, #00b4d8 0%, #0090b0 100%);
+            color: white;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .modal-btn-save:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(0, 180, 216, 0.4);
+        }
+
+        .modal-btn-cancel {
+            background: rgba(255, 255, 255, 0.1);
+            color: #ffffff;
+            border: 2px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .modal-btn-cancel:hover {
+            background: rgba(255, 255, 255, 0.2);
+        }
+
+        /* Countdown Modal */
+        .countdown-modal .modal-container {
+            text-align: center;
+            padding: 25px 20px;
+            background: linear-gradient(135deg, #1a1a1a 0%, #2d2d2d 100%);
+        }
+
+        .countdown-title {
+            color: #00b4d8;
+            font-size: 18px;
+            margin-bottom: 25px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            font-family: 'Montserrat', sans-serif;
+        }
+
+        .countdown-display {
+            font-size: 56px;
+            font-weight: bold;
+            color: #00b4d8;
+            margin: 25px 0;
+            font-family: 'Roboto Mono', monospace;
+            text-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+            letter-spacing: 6px;
+            text-align: center;
+            width: 100%;
+            display: block;
+            line-height: 1.2;
+        }
+
+        .countdown-progress {
+            width: 100%;
+            height: 10px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 5px;
+            margin: 25px 0 20px;
+            overflow: hidden;
+        }
+
+        .countdown-progress-bar {
+            height: 100%;
+            background: linear-gradient(90deg, #00b4d8, #2ed573);
+            width: 100%;
+            transition: width 1s linear;
+        }
+
+        .stop-btn {
+            width: 100%;
+            padding: 16px;
+            border: none;
+            border-radius: 12px;
+            font-size: 15px;
+            font-weight: 600;
+            background: linear-gradient(135deg, #ff4757 0%, #ff3838 100%);
+            color: white;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            margin-top: 15px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            font-family: 'Montserrat', sans-serif;
+        }
+
+        .stop-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(255, 71, 87, 0.4);
+        }
+
+        /* Animações */
+        @keyframes pulse {
+
+            0%,
+            100% {
+                transform: scale(1);
+                opacity: 1;
+            }
+
+            50% {
+                transform: scale(1.1);
+                opacity: 0.8;
+            }
+        }
+
+        .pulse {
+            animation: pulse 1s infinite;
+        }
+
+        /* Responsividade */
+        @media (max-width: 480px) {
+            body {
+                padding: 15px;
+            }
+
+            .tech-pain-logo {
+                width: 100%;
+                max-width: 250px;
+            }
+
+            .config-row {
+                flex-direction: column;
+                gap: 15px;
+            }
+
+            .config-item {
+                margin: 0;
+            }
+
+            .config-value {
+                font-size: 24px;
+            }
+
+            .countdown-display {
+                font-size: 48px;
+                letter-spacing: 4px;
+            }
+
+            .time-options-grid,
+            .current-options-grid,
+            .intensity-options-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .intensity-options-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+
+        /* Otimizações para toque */
+        .touch-optimized {
+            -webkit-tap-highlight-color: transparent;
+            touch-action: manipulation;
+            user-select: none;
+            -webkit-user-select: none;
+        }
+    </style>
+</head>
+
+<body class="touch-optimized">
+    <!-- Container Principal -->
+    <div class="app-container">
+        <!-- Header com Logo REAL -->
+        <div class="app-header">
+            <div class="logo-container">
+                <div class="tech-pain-logo"></div>
+            </div>
+        </div>
+
+        <!-- Status de Conexão Bluetooth -->
+        <div class="bluetooth-section">
+            <div class="bluetooth-status disconnected" id="bluetoothStatus">
+                <div style="display: flex; align-items: center;">
+                    <span class="status-icon" id="bluetoothIcon">📡</span>
+                    <div class="status-text">
+                        <span id="bluetoothStatusText">Bluetooth Desconectado</span>
+                        <span class="device-name" id="deviceName"></span>
+                    </div>
+                </div>
+                <button class="status-action touch-optimized" id="bluetoothAction" onclick="toggleBluetooth()">
+                    Conectar
+                </button>
+            </div>
+
+            <button class="connect-btn touch-optimized" id="connectBtn" onclick="connectBLE()">
+                📡 Conectar Bluetooth
+            </button>
+        </div>
+
+        <!-- Status da Aplicação - SÓ APARECE DURANTE APLICAÇÃO -->
+        <div class="application-status" id="applicationStatus">
+            <div class="status-header">
+                <span class="status-icon-app">⚡</span>
+                <div class="status-title">Aplicação em Andamento</div>
+            </div>
+            <div class="status-content">
+                <div class="status-message">Tempo decorrido:</div>
+                <div class="status-time" id="applicationTime">00:00</div>
+                <div class="status-message">A aplicação está sendo realizada conforme as configurações definidas.</div>
+            </div>
+        </div>
+
+        <!-- Configurações em um único bloco -->
+        <div class="settings-container">
+            <div class="settings-title">Configurações</div>
+
+            <div class="configurations-block" id="configurationsBlock">
+                <div class="configurations-header">
+                    <span class="configurations-icon">⚙️</span>
+                    <div class="configurations-title">Parâmetros da Aplicação</div>
+                </div>
+
+                <div class="config-row">
+                    <!-- Configuração de Tempo -->
+                    <div class="config-item touch-optimized" id="timeConfigItem" onclick="openTimeConfig()">
+                        <div class="config-header">
+                            <span class="config-icon">⏱️</span>
+                            <div class="config-label">Tempo</div>
+                        </div>
+                        <div class="config-value" id="timeValueDisplay">--:--</div>
+                        <div class="config-subtitle" id="timeLabelDisplay">Não definido</div>
+                    </div>
+
+                    <!-- Configuração de Corrente -->
+                    <div class="config-item touch-optimized" id="currentConfigItem" onclick="openCurrentConfig()">
+                        <div class="config-header">
+                            <span class="config-icon">⚡</span>
+                            <div class="config-label">Corrente</div>
+                        </div>
+                        <div class="config-value" id="currentValueDisplay">--</div>
+                        <div class="config-subtitle" id="currentLabelDisplay">Não configurado</div>
+                    </div>
+
+                    <!-- NOVA CONFIGURAÇÃO: Intensidade (0-10) -->
+                    <div class="config-item touch-optimized" id="intensityConfigItem" onclick="openIntensityConfig()">
+                        <div class="config-header">
+                            <span class="config-icon">📶</span>
+                            <div class="config-label">Intensidade</div>
+                        </div>
+                        <div class="config-value" id="intensityValueDisplay">--</div>
+                        <div class="config-subtitle" id="intensityLabelDisplay">Não configurado</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Main Action Buttons - APENAS INICIAR APLICAÇÃO -->
+        <div class="main-actions">
+            <button class="main-action-btn btn-success touch-optimized" onclick="startApplication()" disabled
+                id="startBtn">
+                ▶️ Iniciar Aplicação
+            </button>
+        </div>
+    </div>
+
+    <!-- Modal de Configuração de Tempo -->
+    <div class="modal-overlay" id="timeModal">
+        <div class="modal-container">
+            <div class="modal-header">
+                <div class="modal-title">
+                    <span>⏱️</span> Configurar Tempo
+                </div>
+                <button class="close-btn touch-optimized" onclick="closeConfigModal()">×</button>
+            </div>
+
+            <div class="modal-content">
+                <p style="color: #bdc3c7; text-align: center; margin-bottom: 15px; font-size: 14px;">
+                    Selecione o tempo de aplicação:
+                </p>
+
+                <div class="time-options-grid" id="timeOptions">
+                    <!-- Opções de tempo serão geradas dinamicamente via JavaScript -->
+                </div>
+            </div>
+
+            <div class="modal-actions">
+                <button class="modal-btn modal-btn-cancel touch-optimized" onclick="closeConfigModal()">
+                    Cancelar
+                </button>
+                <button class="modal-btn modal-btn-save touch-optimized" onclick="saveTimeConfig()">
+                    Salvar
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal de Configuração de Corrente -->
+    <div class="modal-overlay" id="currentModal">
+        <div class="modal-container">
+            <div class="modal-header">
+                <div class="modal-title">
+                    <span>⚡</span> Configurar Corrente
+                </div>
+                <button class="close-btn touch-optimized" onclick="closeConfigModal()">×</button>
+            </div>
+
+            <div class="modal-content">
+                <p style="color: #bdc3c7; text-align: center; margin-bottom: 15px; font-size: 14px;">
+                    Selecione um dos valores de corrente:
+                </p>
+
+                <div class="current-options-grid" id="currentOptions">
+                    <!-- Opções de corrente serão geradas dinamicamente via JavaScript -->
+                </div>
+
+                <!-- Informação do PWM calculado -->
+                <div class="pwm-info" id="pwmInfo">
+                    <div class="pwm-info-text" id="pwmInfoText">PWM calculado: --</div>
+                </div>
+            </div>
+
+            <div class="modal-actions">
+                <button class="modal-btn modal-btn-cancel touch-optimized" onclick="closeConfigModal()">
+                    Cancelar
+                </button>
+                <button class="modal-btn modal-btn-save touch-optimized" onclick="saveCurrentConfig()">
+                    Salvar
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- NOVO MODAL: Configuração de Intensidade (0-10) -->
+    <div class="modal-overlay" id="intensityModal">
+        <div class="modal-container">
+            <div class="modal-header">
+                <div class="modal-title">
+                    <span>📶</span> Opções
+                </div>
+                <button class="close-btn touch-optimized" onclick="closeConfigModal()">×</button>
+            </div>
+
+            <div class="modal-content">
+                <p style="color: #bdc3c7; text-align: center; margin-bottom: 15px; font-size: 14px;">
+                    Selecione o nível:
+                </p>
+
+                <div class="intensity-options-grid" id="intensityOptions">
+                    <!-- Opções de intensidade serão geradas dinamicamente via JavaScript -->
+                </div>
+
+                <!-- Informação adicional -->
+                <div class="pwm-info" id="intensityInfo">
+                    <div class="pwm-info-text" id="intensityInfoText">Nível definido: --</div>
+                </div>
+            </div>
+
+            <div class="modal-actions">
+                <button class="modal-btn modal-btn-cancel touch-optimized" onclick="closeConfigModal()">
+                    Cancelar
+                </button>
+                <button class="modal-btn modal-btn-save touch-optimized" onclick="saveIntensityConfig()">
+                    Salvar
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal de Contagem Regressiva -->
+    <div class="modal-overlay" id="countdownModal">
+        <div class="modal-container">
+            <div class="modal-header">
+                <div class="modal-title">
+                    <span>⏱️</span> Aplicação em Andamento
+                </div>
+                <button class="close-btn touch-optimized" onclick="stopApplication()">×</button>
+            </div>
+
+            <div class="modal-content">
+                <div class="countdown-display" id="countdownDisplay">
+                    00:00
+                </div>
+
+                <div class="countdown-progress">
+                    <div class="countdown-progress-bar" id="countdownProgress"></div>
+                </div>
+
+                <button class="stop-btn touch-optimized" onclick="stopApplication()">
+                    ⏹️ Parar Aplicação
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Configurações do ESP32
+        const ESP32_CONFIG = {
+            name: 'TechDevice',
+            serviceUUID: '6e400001-b5a3-f393-e0a9-e50e24dcca9e',
+            rxCharacteristicUUID: '6e400002-b5a3-f393-e0a9-e50e24dcca9e',
+            txCharacteristicUUID: '6e400003-b5a3-f393-e0a9-e50e24dcca9e'
+        };
+
+        // Variáveis globais
+        let device = null;
+        let characteristic = null;
+        let countdownInterval;
+        let totalTime = 0;
+        let remainingTime = 0;
+        let applicationActive = false;
+        let isConnected = false;
+        let applicationStatusInterval;
+        let selectedTimeOption = null;
+        let selectedCurrentOption = null;
+        let selectedIntensityOption = null;
+
+        // Configurações atuais
+        let currentConfig = {
+            time: null,
+            currentValue: null,
+            pwmCalculated: null,
+            intensity: null // NOVA CONFIGURAÇÃO: intensidade de 0 a 10
+        };
+
+        // ==============================================
+        // FUNÇÕES DE STATUS BLUETOOTH
+        // ==============================================
+
+        // Atualizar status do Bluetooth
+        function updateBluetoothStatus() {
+            const statusElement = document.getElementById('bluetoothStatus');
+            const statusText = document.getElementById('bluetoothStatusText');
+            const statusIcon = document.getElementById('bluetoothIcon');
+            const actionElement = document.getElementById('bluetoothAction');
+            const deviceNameElement = document.getElementById('deviceName');
+            const connectBtn = document.getElementById('connectBtn');
+
+            if (isConnected && device) {
+                // Status: Conectado
+                statusElement.className = 'bluetooth-status connected';
+                statusText.textContent = 'Bluetooth Conectado';
+                statusIcon.textContent = '📡';
+                actionElement.textContent = 'Desconectar';
+                connectBtn.innerHTML = '📡 Desconectar Bluetooth';
+
+                // Mostrar nome do dispositivo se disponível
+                if (device.name) {
+                    deviceNameElement.textContent = `(${device.name})`;
+                } else {
+                    deviceNameElement.textContent = '(Dispositivo)';
+                }
+
+            } else if (isConnected === false && device === null) {
+                // Status: Desconectado
+                statusElement.className = 'bluetooth-status disconnected';
+                statusText.textContent = 'Bluetooth Desconectado';
+                statusIcon.textContent = '📡';
+                actionElement.textContent = 'Conectar';
+                connectBtn.innerHTML = '📡 Conectar Bluetooth';
+                deviceNameElement.textContent = '';
+
+            } else {
+                // Status: Conectando
+                statusElement.className = 'bluetooth-status connecting';
+                statusText.textContent = 'Conectando...';
+                statusIcon.textContent = '⏳';
+                actionElement.textContent = 'Cancelar';
+                connectBtn.innerHTML = '⏳ Conectando...';
+                connectBtn.disabled = true;
+                deviceNameElement.textContent = '';
+            }
+
+            updateStartButton();
+        }
+
+        // Alternar entre conectar/desconectar
+        function toggleBluetooth() {
+            if (isConnected) {
+                disconnectBLE();
+            } else {
+                connectBLE();
+            }
+        }
+
+        // ==============================================
+        // INICIALIZAÇÃO
+        // ==============================================
+
+        document.addEventListener('DOMContentLoaded', function () {
+            updateDisplay();
+            generateTimeOptions();
+            generateCurrentOptions();
+            generateIntensityOptions(); // GERAR OPÇÕES DE INTENSIDADE
+            updateBluetoothStatus();
+            document.body.style.minHeight = window.innerHeight + 'px';
+
+            document.addEventListener('deviceready', onDeviceReady, false);
+
+            if (!window.cordova) {
+                console.log('Modo navegador - Web Bluetooth será usado');
+            }
+
+            // Habilitar configurações imediatamente (SEM PRECISAR CONECTAR)
+            enableConfigItems();
+        });
+
+        function onDeviceReady() {
+            console.log('✅ Cordova está pronto!');
+            if (typeof ble === 'undefined') {
+                console.warn('⚠️ Plugin BLE não encontrado.');
+            }
+        }
+
+        // ==============================================
+        // FUNÇÕES DE CONEXÃO BLUETOOTH
+        // ==============================================
+
+        function canUseBluetooth() {
+            if (window.cordova && typeof ble !== 'undefined') {
+                return 'cordova';
+            } else if (navigator.bluetooth) {
+                return 'web';
+            }
+            return false;
+        }
+
+        async function connectBLE() {
+            try {
+                // Atualizar UI para estado de conexão
+                isConnected = null; // Estado intermediário
+                updateBluetoothStatus();
+
+                const bluetoothType = canUseBluetooth();
+
+                if (!bluetoothType) {
+                    throw new Error('Bluetooth não suportado neste dispositivo');
+                }
+
+                if (bluetoothType === 'cordova') {
+                    await connectWithCordova();
+                } else {
+                    await connectWithWebBluetooth();
+                }
+
+                // Atualizar UI para conectado
+                isConnected = true;
+                updateBluetoothStatus();
+                showAlert('✅ Bluetooth conectado com sucesso!');
+
+            } catch (error) {
+                console.error('Erro ao conectar:', error);
+                showAlert('❌ Erro ao conectar: ' + error.message);
+
+                // Atualizar UI para desconectado
+                isConnected = false;
+                device = null;
+                updateBluetoothStatus();
+            }
+        }
+
+        async function connectWithCordova() {
+            return new Promise((resolve, reject) => {
+                ble.scan([], 5,
+                    function (deviceFound) {
+                        if (deviceFound.name && (deviceFound.name.includes('Tech') ||
+                            deviceFound.name.includes('ESP32') ||
+                            deviceFound.name.includes(ESP32_CONFIG.name))) {
+
+                            ble.stopScan(
+                                function () { },
+                                function () { }
+                            );
+
+                            ble.connect(deviceFound.id,
+                                function (peripheral) {
+                                    console.log('✅ Conectado via Cordova:', peripheral);
+                                    device = {
+                                        id: deviceFound.id,
+                                        name: deviceFound.name,
+                                        type: 'cordova'
+                                    };
+                                    isConnected = true;
+
+                                    ble.startNotification(
+                                        device.id,
+                                        ESP32_CONFIG.serviceUUID,
+                                        ESP32_CONFIG.txCharacteristicUUID,
+                                        function (buffer) {
+                                            try {
+                                                const data = new Uint8Array(buffer);
+                                                const message = new TextDecoder().decode(data);
+                                                console.log('📥 Recebido via Cordova:', message);
+                                                handleNotifications(message);
+                                            } catch (e) {
+                                                console.error('Erro ao processar notificação:', e);
+                                            }
+                                        },
+                                        function (error) {
+                                            console.error('Erro nas notificações Cordova:', error);
+                                        }
+                                    );
+
+                                    resolve();
+                                },
+                                function (error) {
+                                    console.error('Erro ao conectar Cordova:', error);
+                                    reject(new Error('Falha na conexão: ' + error));
+                                }
+                            );
+                        }
+                    },
+                    function (error) {
+                        console.error('Erro no scan:', error);
+                        reject(new Error('Nenhum dispositivo encontrado. Verifique se o Bluetooth está ligado.'));
+                    }
+                );
+            });
+        }
+
+        async function connectWithWebBluetooth() {
+            device = await navigator.bluetooth.requestDevice({
+                filters: [{ name: ESP32_CONFIG.name }],
+                optionalServices: [ESP32_CONFIG.serviceUUID]
+            });
+
+            const server = await device.gatt.connect();
+            const service = await server.getPrimaryService(ESP32_CONFIG.serviceUUID);
+            characteristic = await service.getCharacteristic(ESP32_CONFIG.rxCharacteristicUUID);
+
+            const txCharacteristic = await service.getCharacteristic(ESP32_CONFIG.txCharacteristicUUID);
+            await txCharacteristic.startNotifications();
+            txCharacteristic.addEventListener('characteristicvaluechanged', function (event) {
+                const value = new TextDecoder().decode(event.target.value);
+                handleNotifications(value);
+            });
+
+            isConnected = true;
+            device.type = 'web';
+
+            device.addEventListener('gattserverdisconnected', onDisconnected);
+        }
+
+        async function writeBLEMessage(message) {
+            if (!isConnected) {
+                throw new Error('Nenhum dispositivo conectado');
+            }
+
+            console.log('📤 Enviando:', message);
+
+            if (device.type === 'cordova') {
+                return new Promise((resolve, reject) => {
+                    const buffer = new TextEncoder().encode(message).buffer;
+                    ble.write(
+                        device.id,
+                        ESP32_CONFIG.serviceUUID,
+                        ESP32_CONFIG.rxCharacteristicUUID,
+                        buffer,
+                        function () {
+                            console.log('✅ Mensagem enviada via Cordova');
+                            resolve();
+                        },
+                        function (error) {
+                            console.error('❌ Erro ao enviar via Cordova:', error);
+                            reject(error);
+                        }
+                    );
+                });
+            } else {
+                const encoder = new TextEncoder();
+                await characteristic.writeValue(encoder.encode(message));
+            }
+        }
+
+        function disconnectBLE() {
+            // Atualizar UI imediatamente
+            isConnected = false;
+            updateBluetoothStatus();
+
+            if (device) {
+                if (device.type === 'cordova' && device.id) {
+                    ble.disconnect(device.id,
+                        function () {
+                            console.log('✅ Desconectado via Cordova');
+                            onDisconnected();
+                        },
+                        function (error) {
+                            console.error('❌ Erro ao desconectar:', error);
+                            onDisconnected();
+                        }
+                    );
+                } else if (device.gatt && device.gatt.connected) {
+                    device.gatt.disconnect();
+                    onDisconnected();
+                } else {
+                    onDisconnected();
+                }
+            } else {
+                onDisconnected();
+            }
+        }
+
+        function onDisconnected() {
+            isConnected = false;
+            device = null;
+            characteristic = null;
+
+            if (applicationActive) {
+                applicationFinished(true);
+            }
+
+            hideCountdown();
+            hideApplicationStatus();
+            updateBluetoothStatus();
+            showAlert('⚠️ Bluetooth desconectado!');
+        }
+
+        function handleNotifications(message) {
+            console.log('📥 Recebido do ESP32:', message);
+            const parts = message.split(' ');
+            if (parts.length >= 3) {
+                const current = parseFloat(parts[0]);
+                const voltage = parseFloat(parts[1]);
+                const error = parseInt(parts[2]);
+
+                console.log(`📊 Leitura: ${current} mA, ${voltage} V, Erro: ${error}`);
+
+                if ((error === 4 || error === 5) && applicationActive) {
+                    console.log('✅ Aplicação finalizada pelo dispositivo');
+                    applicationFinished();
+                }
+            }
+        }
+
+        // ==============================================
+        // CONFIGURAÇÕES DA INTERFACE
+        // ==============================================
+
+        function enableConfigItems() {
+            const timeConfigItem = document.getElementById('timeConfigItem');
+            const currentConfigItem = document.getElementById('currentConfigItem');
+            const intensityConfigItem = document.getElementById('intensityConfigItem');
+
+            timeConfigItem.classList.remove('disabled');
+            currentConfigItem.classList.remove('disabled');
+            intensityConfigItem.classList.remove('disabled');
+        }
+
+        function disableConfigItems() {
+            const timeConfigItem = document.getElementById('timeConfigItem');
+            const currentConfigItem = document.getElementById('currentConfigItem');
+            const intensityConfigItem = document.getElementById('intensityConfigItem');
+
+            timeConfigItem.classList.add('disabled');
+            currentConfigItem.classList.add('disabled');
+            intensityConfigItem.classList.add('disabled');
+        }
+
+        // Gerar opções de tempo
+        function generateTimeOptions() {
+            const timeOptionsContainer = document.getElementById('timeOptions');
+            timeOptionsContainer.innerHTML = '';
+
+            const timeOptions = [
+                { seconds: 15, label: '15 segundos' },
+                { seconds: 30, label: '30 segundos' },
+                { seconds: 45, label: '45 segundos' },
+                { seconds: 60, label: '1 minuto' },
+                { seconds: 120, label: '2 minutos' },
+                { seconds: 180, label: '3 minutos' },
+                { seconds: 300, label: '5 minutos' },
+                { seconds: 600, label: '10 minutos' },
+                { seconds: 900, label: '15 minutos' },
+                { seconds: 1200, label: '20 minutos' },
+                { seconds: 1800, label: '30 minutos' },
+                { seconds: 2700, label: '45 minutos' },
+                { seconds: 3600, label: '1 hora' }
+            ];
+
+            timeOptions.forEach(time => {
+                const timeOption = document.createElement('div');
+                timeOption.className = 'time-option touch-optimized';
+                timeOption.dataset.seconds = time.seconds;
+
+                const minutes = Math.floor(time.seconds / 60);
+                const seconds = time.seconds % 60;
+                const timeStr = minutes.toString().padStart(2, '0') + ':' +
+                    seconds.toString().padStart(2, '0');
+
+                timeOption.innerHTML = `
+                    <div class="time-option-value">${timeStr}</div>
+                    <div class="time-option-description">${time.label}</div>
+                `;
+
+                timeOption.onclick = function (event) {
+                    event.stopPropagation();
+                    selectTimeOptionInModal(time.seconds, this);
+                };
+
+                timeOptionsContainer.appendChild(timeOption);
+            });
+        }
+
+        // Gerar opções de corrente
+        function generateCurrentOptions() {
+            const currentOptionsContainer = document.getElementById('currentOptions');
+            currentOptionsContainer.innerHTML = '';
+
+            const currentValues = [
+                { value: 10, label: '0.01 mA' },
+                { value: 50, label: '0.05 mA' },
+                { value: 100, label: '0.10 mA' },
+                { value: 250, label: '0.25 mA' },
+                { value: 500, label: '0.50 mA' },
+                { value: 750, label: '0.75 mA' },
+                { value: 1000, label: '1.00 mA' },
+                { value: 1100, label: '1.10 mA' }
+            ];
+
+            currentValues.forEach(current => {
+                const currentOption = document.createElement('div');
+                currentOption.className = 'current-option touch-optimized';
+                currentOption.dataset.value = current.value;
+
+                currentOption.innerHTML = `
+                    <div class="current-option-value">${current.label.split(' ')[0]}</div>
+                    <div class="current-option-unit">${current.label.split(' ')[1]}</div>
+                `;
+
+                currentOption.onclick = function (event) {
+                    event.stopPropagation();
+                    selectCurrentOptionInModal(current.value, this);
+                };
+
+                currentOptionsContainer.appendChild(currentOption);
+            });
+        }
+
+        // NOVA FUNÇÃO: Gerar opções de intensidade (0-10)
+        function generateIntensityOptions() {
+            const intensityOptionsContainer = document.getElementById('intensityOptions');
+            intensityOptionsContainer.innerHTML = '';
+
+            // Criar opções de 0 a 10 (OPÇÕES)
+            for (let i = 0; i <= 9; i++) {
+                const intensityOption = document.createElement('div');
+                intensityOption.className = 'intensity-option touch-optimized';
+                intensityOption.dataset.value = i;
+
+                let label = '';
+                if (i === 0) {
+                    label = 'Nível 0';
+                } else if (i === 1) {
+                    label = 'Nível 1';
+                } else if (i === 2) {
+                    label = 'Nível 2';
+                } else if (i === 3) {
+                    label = 'Nível 3';
+                } else if (i === 4) {
+                    label = 'Nível 4';
+                } else if (i === 5) {
+                    label = 'Nível 5';
+                } else if (i === 6) {
+                    label = 'Nível 6';
+                } else if (i === 7) {
+                    label = 'Nível 7';
+                } else if (i === 8) {
+                    label = 'Nível 8';
+                } else if (i === 9) {
+                    label = 'Nível 9';
+                }
+
+                intensityOption.innerHTML = `
+                    <div class="intensity-option-value">${i}</div>
+                    <div class="intensity-option-label">${label}</div>
+                `;
+
+                intensityOption.onclick = function (event) {
+                    event.stopPropagation();
+                    selectIntensityOptionInModal(i, this);
+                };
+
+                intensityOptionsContainer.appendChild(intensityOption);
+            }
+        }
+
+        // Funções de seleção
+        function selectTimeOptionInModal(seconds, element) {
+            if (selectedTimeOption) {
+                selectedTimeOption.classList.remove('selected');
+            }
+            element.classList.add('selected');
+            selectedTimeOption = element;
+            window.selectedTimeSeconds = seconds;
+        }
+
+        function selectCurrentOptionInModal(value, element) {
+            if (selectedCurrentOption) {
+                selectedCurrentOption.classList.remove('selected');
+            }
+            element.classList.add('selected');
+            selectedCurrentOption = element;
+
+            // Calcular PWM
+            const currentInmA = value / 1000;
+            const pwmEquivalent = Math.round(currentInmA * 3723);
+            const pwmLimited = Math.max(0, Math.min(4095, pwmEquivalent));
+
+            document.getElementById('pwmInfoText').textContent = `PWM calculado: ${pwmLimited}`;
+
+            currentConfig.currentValue = value;
+            currentConfig.pwmCalculated = pwmLimited;
+        }
+
+        // NOVA FUNÇÃO: Selecionar opção de intensidade
+        function selectIntensityOptionInModal(value, element) {
+            if (selectedIntensityOption) {
+                selectedIntensityOption.classList.remove('selected');
+            }
+            element.classList.add('selected');
+            selectedIntensityOption = element;
+            currentConfig.intensity = value;
+
+            document.getElementById('intensityInfoText').textContent = `Intensidade selecionada: ${value}`;
+        }
+
+        // FUNÇÕES MODIFICADAS: REMOVIDA A VERIFICAÇÃO DE CONEXÃO
+        function openTimeConfig() {
+            /*COMENTADO PARA TESTES - DESCOMENTE QUANDO TIVER A ESP32
+            if (!isConnected) {
+                showAlert('⚠️ Conecte-se ao dispositivo primeiro!');
+                return;
+            }
+            */
+
+
+            // Resetar seleção
+            if (selectedTimeOption) {
+                selectedTimeOption.classList.remove('selected');
+                selectedTimeOption = null;
+            }
+
+            // Selecionar opção atual se existir
+            if (currentConfig.time && currentConfig.time.totalSeconds) {
+                const options = document.querySelectorAll('.time-option');
+                options.forEach(option => {
+                    if (parseInt(option.dataset.seconds) === currentConfig.time.totalSeconds) {
+                        option.classList.add('selected');
+                        selectedTimeOption = option;
+                        window.selectedTimeSeconds = currentConfig.time.totalSeconds;
+                    }
+                });
+            }
+
+            document.getElementById('timeModal').style.display = 'flex';
+        }
+
+        function openCurrentConfig() {
+            /*COMENTADO PARA TESTES - DESCOMENTE QUANDO TIVER A ESP32
+            if (!isConnected) {
+                showAlert('⚠️ Conecte-se ao dispositivo primeiro!');
+                return;
+            }
+            */
+
+            // Resetar seleção
+            if (selectedCurrentOption) {
+                selectedCurrentOption.classList.remove('selected');
+                selectedCurrentOption = null;
+            }
+
+            // Selecionar opção atual se existir
+            if (currentConfig.currentValue) {
+                const options = document.querySelectorAll('.current-option');
+                options.forEach(option => {
+                    if (parseInt(option.dataset.value) === currentConfig.currentValue) {
+                        option.classList.add('selected');
+                        selectedCurrentOption = option;
+
+                        // Calcular PWM
+                        const pwmEquivalent = Math.round((currentConfig.currentValue / 1000) * 3723);
+                        const pwmLimited = Math.max(0, Math.min(4095, pwmEquivalent));
+                        document.getElementById('pwmInfoText').textContent = `PWM calculado: ${pwmLimited}`;
+                    }
+                });
+            }
+
+            document.getElementById('currentModal').style.display = 'flex';
+        }
+
+        // NOVA FUNÇÃO: Abrir configuração de intensidade
+        function openIntensityConfig() {
+            /*COMENTADO PARA TESTES - DESCOMENTE QUANDO TIVER A ESP32
+            if (!isConnected) {
+                showAlert('⚠️ Conecte-se ao dispositivo primeiro!');
+                return;
+            }
+            */
+
+            // Resetar seleção
+            if (selectedIntensityOption) {
+                selectedIntensityOption.classList.remove('selected');
+                selectedIntensityOption = null;
+            }
+
+            // Selecionar opção atual se existir
+            if (currentConfig.intensity !== null && currentConfig.intensity !== undefined) {
+                const options = document.querySelectorAll('.intensity-option');
+                options.forEach(option => {
+                    if (parseInt(option.dataset.value) === currentConfig.intensity) {
+                        option.classList.add('selected');
+                        selectedIntensityOption = option;
+                        document.getElementById('intensityInfoText').textContent = `Intensidade selecionada: ${currentConfig.intensity}`;
+                    }
+                });
+            }
+
+            document.getElementById('intensityModal').style.display = 'flex';
+        }
+
+        function closeConfigModal() {
+            document.getElementById('timeModal').style.display = 'none';
+            document.getElementById('currentModal').style.display = 'none';
+            document.getElementById('intensityModal').style.display = 'none';
+        }
+
+        function saveTimeConfig() {
+            if (!window.selectedTimeSeconds && window.selectedTimeSeconds !== 0) {
+                showAlert('❌ Selecione um tempo!');
+                return;
+            }
+
+            const seconds = window.selectedTimeSeconds;
+
+            if (seconds === 0) {
+                currentConfig.time = null;
+            } else {
+                const minutes = Math.floor(seconds / 60);
+                const secs = seconds % 60;
+                currentConfig.time = {
+                    minutes,
+                    seconds: secs,
+                    totalSeconds: seconds
+                };
+            }
+
+            closeConfigModal();
+            updateDisplay();
+            showAlert('✅ Configuração de tempo salva!');
+        }
+
+        function saveCurrentConfig() {
+            if (!currentConfig.currentValue) {
+                showAlert('❌ Selecione um valor de corrente!');
+                return;
+            }
+
+            closeConfigModal();
+            updateDisplay();
+            showAlert('✅ Configuração de corrente salva!');
+        }
+
+        // NOVA FUNÇÃO: Salvar configuração de intensidade
+        function saveIntensityConfig() {
+            if (currentConfig.intensity === null || currentConfig.intensity === undefined) {
+                showAlert('❌ Selecione um nível de intensidade!');
+                return;
+            }
+
+            closeConfigModal();
+            updateDisplay();
+            showAlert(`✅ Intensidade ${currentConfig.intensity} salva!`);
+        }
+
+        function updateDisplay() {
+            // Atualizar tempo
+            const timeValueDisplay = document.getElementById('timeValueDisplay');
+            const timeLabelDisplay = document.getElementById('timeLabelDisplay');
+
+            if (currentConfig.time) {
+                const minutes = currentConfig.time.minutes;
+                const seconds = currentConfig.time.seconds;
+
+                const timeStr = `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+                timeValueDisplay.textContent = timeStr;
+                timeLabelDisplay.textContent = 'Configurado';
+            } else {
+                timeValueDisplay.textContent = '--:--';
+                timeLabelDisplay.textContent = 'Não definido';
+            }
+
+            // Atualizar corrente
+            const currentValueDisplay = document.getElementById('currentValueDisplay');
+            const currentLabelDisplay = document.getElementById('currentLabelDisplay');
+
+            if (currentConfig.currentValue !== null) {
+                const currentInmA = (currentConfig.currentValue / 1000).toFixed(2);
+                currentValueDisplay.textContent = `${currentInmA} mA`;
+                currentLabelDisplay.textContent = 'Configurado';
+            } else {
+                currentValueDisplay.textContent = '--';
+                currentLabelDisplay.textContent = 'Não configurado';
+            }
+
+            // Atualizar intensidade (NOVO)
+            const intensityValueDisplay = document.getElementById('intensityValueDisplay');
+            const intensityLabelDisplay = document.getElementById('intensityLabelDisplay');
+
+            if (currentConfig.intensity !== null && currentConfig.intensity !== undefined) {
+                intensityValueDisplay.textContent = currentConfig.intensity;
+                intensityLabelDisplay.textContent = 'Configurado';
+            } else {
+                intensityValueDisplay.textContent = '--';
+                intensityLabelDisplay.textContent = 'Não configurado';
+            }
+
+            updateStartButton();
+        }
+
+        function updateStartButton() {
+            const timeSet = currentConfig.time !== null;
+            const currentSet = currentConfig.currentValue !== null;
+            const intensitySet = currentConfig.intensity !== null;
+
+            // MODIFICADO: Permitir teste sem conexão
+            // Apenas verifica se as configurações estão definidas
+            document.getElementById('startBtn').disabled = !(timeSet && currentSet && intensitySet);
+        }
+
+        // ==============================================
+        // FUNÇÕES DE APLICAÇÃO
+        // ==============================================
+
+        function showApplicationStatus() {
+            const statusElement = document.getElementById('applicationStatus');
+            statusElement.classList.add('active');
+
+            updateApplicationTime();
+
+            if (applicationStatusInterval) {
+                clearInterval(applicationStatusInterval);
+            }
+            applicationStatusInterval = setInterval(updateApplicationTime, 1000);
+        }
+
+        function hideApplicationStatus() {
+            const statusElement = document.getElementById('applicationStatus');
+            statusElement.classList.remove('active');
+
+            if (applicationStatusInterval) {
+                clearInterval(applicationStatusInterval);
+            }
+        }
+
+        function updateApplicationTime() {
+            if (!applicationActive || totalTime === 0 || remainingTime === undefined) return;
+
+            const elapsedTime = totalTime - remainingTime;
+            const minutes = Math.floor(elapsedTime / 60);
+            const seconds = elapsedTime % 60;
+
+            const timeString = `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+            document.getElementById('applicationTime').textContent = timeString;
+        }
+
+        async function turnOffOutput() {
+            try {
+                const offCommand = '#T#K4#';
+                console.log('Desligando saída do ESP32...');
+                // MODIFICADO: Não tentar enviar se não estiver conectado
+                if (isConnected) {
+                    await writeBLEMessage(offCommand);
+                    console.log('✅ Saída desligada');
+                } else {
+                    console.log('⚠️ Não conectado - simulando desligamento');
+                }
+            } catch (error) {
+                console.error('❌ Erro ao desligar saída:', error);
+            }
+        }
+
+        async function startApplication() {
+            try {
+                // REMOVIDO: Verificação de conexão
+                // if (!isConnected) {
+                //     showAlert('⚠️ Conecte-se ao dispositivo primeiro!');
+                //     return;
+                // }
+
+                if (!currentConfig.time) {
+                    showAlert('⚠️ Configure o tempo antes de iniciar!');
+                    return;
+                }
+
+                if (!currentConfig.currentValue) {
+                    showAlert('⚠️ Configure a corrente antes de iniciar!');
+                    return;
+                }
+
+                if (currentConfig.intensity === null || currentConfig.intensity === undefined) {
+                    showAlert('⚠️ Configure a intensidade antes de iniciar!');
+                    return;
+                }
+
+                totalTime = currentConfig.time.totalSeconds;
+
+                if (totalTime === 0) {
+                    showAlert('❌ Configure um tempo válido!');
+                    return;
+                }
+
+                const minutes = currentConfig.time.minutes;
+                const seconds = currentConfig.time.seconds;
+
+                const timeStr = minutes.toString().padStart(2, '0') + ':' +
+                    seconds.toString().padStart(2, '0');
+
+                const currentValueStr = currentConfig.currentValue.toString().padStart(3, '0');
+
+                // NOVO: Adicionar intensidade ao comando
+                const intensityStr = currentConfig.intensity.toString().padStart(2, '0');
+                const command = `#T#K1C${currentValueStr}T${timeStr}I${intensityStr}#`;
+
+                console.log('Enviando configuração:', command);
+
+                // MODIFICADO: Não tentar enviar se não estiver conectado
+                if (isConnected) {
+                    await writeBLEMessage(command);
+                    await new Promise(resolve => setTimeout(resolve, 500));
+
+                    const startCommand = '#T#K2#';
+                    await writeBLEMessage(startCommand);
+                } else {
+                    console.log('⚠️ Não conectado - simulando envio de comando');
+                    showAlert('⚠️ Modo de teste: Aplicação iniciada (sem conexão ESP32)');
+                }
+
+                console.log('Aplicação iniciada');
+
+                applicationActive = true;
+                showCountdown();
+                showApplicationStatus();
+
+            } catch (error) {
+                console.error('Erro ao iniciar:', error);
+                showAlert('❌ Erro ao iniciar: ' + error.message);
+            }
+        }
+
+        async function stopApplication() {
+            try {
+                await turnOffOutput();
+
+                await new Promise(resolve => setTimeout(resolve, 200));
+
+                // MODIFICADO: Não tentar enviar se não estiver conectado
+                if (isConnected) {
+                    const command = '#T#K4#';
+                    console.log('Parando aplicação...');
+                    await writeBLEMessage(command);
+                } else {
+                    console.log('⚠️ Não conectado - simulando parada');
+                }
+
+                applicationFinished();
+            } catch (error) {
+                console.error('Erro ao parar:', error);
+                showAlert('❌ Erro ao parar: ' + error.message);
+                applicationFinished();
+            }
+        }
+
+        async function applicationFinished(disconnected = false) {
+            try {
+                await turnOffOutput();
+            } catch (error) {
+                console.error('Erro ao desligar saída:', error);
+            }
+
+            hideCountdown();
+            hideApplicationStatus();
+            applicationActive = false;
+
+            if (!disconnected) {
+                // Resetar configurações após aplicação
+                currentConfig = {
+                    time: null,
+                    currentValue: null,
+                    pwmCalculated: null,
+                    intensity: null
+                };
+                updateDisplay();
+            }
+
+            console.log('Aplicação finalizada');
+            showAlert('✅ Aplicação finalizada!');
+        }
+
+        function showCountdown() {
+            if (totalTime === 0) return;
+
+            remainingTime = totalTime;
+
+            document.getElementById('countdownModal').style.display = 'flex';
+            updateCountdown();
+            countdownInterval = setInterval(updateCountdown, 1000);
+        }
+
+        async function updateCountdown() {
+            remainingTime--;
+
+            const minutes = Math.floor(remainingTime / 60);
+            const seconds = remainingTime % 60;
+
+            const display = document.getElementById('countdownDisplay');
+            const formattedTime = `${minutes.toString().padStart(2, '0')} : ${seconds.toString().padStart(2, '0')}`;
+            display.textContent = formattedTime;
+
+            const progressPercent = totalTime > 0 ? (remainingTime / totalTime) * 100 : 100;
+            document.getElementById('countdownProgress').style.width = `${progressPercent}%`;
+
+            if (remainingTime <= 10) {
+                display.classList.add('pulse');
+            } else {
+                display.classList.remove('pulse');
+            }
+
+            if (remainingTime === 0) {
+                clearInterval(countdownInterval);
+
+                try {
+                    await turnOffOutput();
+                } catch (error) {
+                    console.error('Erro ao desligar saída:', error);
+                }
+
+                setTimeout(() => {
+                    applicationFinished();
+                }, 1000);
+            }
+        }
+
+        function hideCountdown() {
+            if (countdownInterval) {
+                clearInterval(countdownInterval);
+            }
+            document.getElementById('countdownModal').style.display = 'none';
+            const display = document.getElementById('countdownDisplay');
+            if (display) {
+                display.classList.remove('pulse');
+            }
+        }
+
+        // ==============================================
+        // FUNÇÕES AUXILIARES
+        // ==============================================
+
+        function showAlert(message) {
+            if (navigator.notification && navigator.notification.alert) {
+                navigator.notification.alert(
+                    message,
+                    function () { },
+                    'TECH PAIN',
+                    'OK'
+                );
+            } else {
+                alert(message);
+            }
+        }
+
+        window.addEventListener('click', function (event) {
+            if (event.target.classList.contains('modal-overlay')) {
+                if (!applicationActive) {
+                    closeConfigModal();
+                }
+            }
+        });
+
+        document.addEventListener('keydown', function (event) {
+            if (event.key === 'Escape') {
+                if (!applicationActive) {
+                    closeConfigModal();
+                }
+                hideCountdown();
+            }
+        });
+
+        window.addEventListener('resize', function () {
+            document.body.style.minHeight = window.innerHeight + 'px';
+        });
+    </script>
+</body>
+
+</html>
